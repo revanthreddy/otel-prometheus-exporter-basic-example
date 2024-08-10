@@ -1,0 +1,34 @@
+extensions:
+  zpages:
+    endpoint: 0.0.0.0:55679
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"  # Expose Prometheus metrics from the exporter
+  logging:  # Optional: Log the received metrics for debugging
+    loglevel: debug
+  file:
+    path: "/etc/otelcol-contrib/metrics_output.txt"  # Path to save metrics
+
+processors:
+  batch:  # Optional: Batch metrics for more efficient processing
+    timeout: 5s
+    send_batch_size: 100
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, logging, file]  # Export to Prometheus, log, and write to file
+  extensions: [health_check, zpages]
